@@ -1,0 +1,33 @@
+GO  
+
+/* SET EXERCISE 5: VIEW
+   Schema: CW1
+   Description: Combines Trail, Owner, RouteType, and Features for the webpage.
+*/
+
+-- 1. Create the View
+CREATE OR ALTER VIEW CW1.vw_TrailDetails AS
+SELECT 
+    t.TrailID,
+    t.TrailName,
+    t.Difficulty,
+    t.Location,
+    t.LengthKm,
+    u.FullName AS OwnerName,            -- Joined from Users
+    rt.RouteTypeName,                   -- Joined from RouteType
+    
+    -- This trick combines multiple features (like "Waterfall, Dog Friendly") into one string
+    STRING_AGG(f.FeatureName, ', ') WITHIN GROUP (ORDER BY f.FeatureName) AS Features
+    
+FROM CW1.Trails t
+INNER JOIN CW1.Users u ON t.OwnerID = u.UserID
+INNER JOIN CW1.RouteType rt ON t.RouteTypeID = rt.RouteTypeID
+LEFT JOIN CW1.TrailFeature tf ON t.TrailID = tf.TrailID
+LEFT JOIN CW1.Feature f ON tf.FeatureID = f.FeatureID
+
+GROUP BY 
+    t.TrailID, t.TrailName, t.Difficulty, t.Location, t.LengthKm, u.FullName, rt.RouteTypeName;
+GO
+
+-- 2. Test the View 
+SELECT * FROM CW1.vw_TrailDetails;
