@@ -1,0 +1,32 @@
+/* SET EXERCISE 7: TRIGGER
+   Schema: CW1
+   Description: Automatically logs new trail additions to the TrailLog table.
+*/
+
+-- 1. Create the Trigger
+GO
+CREATE OR ALTER TRIGGER CW1.trg_LogNewTrail
+ON CW1.Trails
+AFTER INSERT
+AS
+BEGIN
+    -- The 'INSERTED' table is a special temporary table that holds the new data
+    DECLARE @NewTrailID INT;
+    SELECT @NewTrailID = TrailID FROM INSERTED;
+
+    -- Insert a record into the Log table
+    INSERT INTO CW1.TrailLog (TrailID, Action, UserPerformed)
+    VALUES (@NewTrailID, 'INSERT', 'System/User'); 
+END;
+GO
+
+-- 2. Test the Trigger
+-- A. Insert a new trail 
+EXEC CW1.sp_InsertTrail 'Trigger Test Trail', 'Easy', 'Log City', 1.0, 1, 1;
+
+-- B. Check the Log Table to prove it worked 
+SELECT * FROM CW1.TrailLog;
+
+-- C. Clean up (Delete the test data)
+DELETE FROM CW1.Trails WHERE TrailName = 'Trigger Test Trail';
+DELETE FROM CW1.TrailLog WHERE Action = 'INSERT' AND TrailID IS NOT NULL;
