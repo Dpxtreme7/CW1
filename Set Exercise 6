@@ -1,0 +1,70 @@
+/* SET EXERCISE 6: STORED PROCEDURES
+   Schema: CW1
+   Description: CRUD operations for the Trails table.
+*/
+
+-- 1. CREATE PROCEDURE (Insert)
+GO
+CREATE OR ALTER PROCEDURE CW1.sp_InsertTrail
+    @TrailName NVARCHAR(200),
+    @Difficulty NVARCHAR(50),
+    @Location NVARCHAR(100),
+    @LengthKm DECIMAL(5,2),
+    @OwnerID INT,
+    @RouteTypeID INT
+AS
+BEGIN
+    INSERT INTO CW1.Trails (TrailName, Difficulty, Location, LengthKm, OwnerID, RouteTypeID)
+    VALUES (@TrailName, @Difficulty, @Location, @LengthKm, @OwnerID, @RouteTypeID);
+END;
+GO
+
+-- 2. READ PROCEDURE (Select)
+CREATE OR ALTER PROCEDURE CW1.sp_SelectTrails
+AS
+BEGIN
+    SELECT * FROM CW1.Trails;
+END;
+GO
+
+-- 3. UPDATE PROCEDURE (Update)
+CREATE OR ALTER PROCEDURE CW1.sp_UpdateTrail
+    @TrailID INT,
+    @NewName NVARCHAR(200),
+    @NewDifficulty NVARCHAR(50)
+AS
+BEGIN
+    UPDATE CW1.Trails
+    SET TrailName = @NewName, Difficulty = @NewDifficulty
+    WHERE TrailID = @TrailID;
+END;
+GO
+
+-- 4. DELETE PROCEDURE (Delete)
+CREATE OR ALTER PROCEDURE CW1.sp_DeleteTrail
+    @TrailID INT
+AS
+BEGIN
+    -- First delete links in child tables to prevent FK errors
+    DELETE FROM CW1.TrailLocations WHERE TrailID = @TrailID;
+    DELETE FROM CW1.TrailFeature WHERE TrailID = @TrailID;
+    
+    -- Then delete the trail itself
+    DELETE FROM CW1.Trails WHERE TrailID = @TrailID;
+END;
+GO
+
+-- 5. TEST THE PROCEDURES (Run this block to get your screenshot)
+-- A. Insert a new trail
+EXEC CW1.sp_InsertTrail 'Test Trail', 'Easy', 'Plymouth', 2.5, 1, 1;
+
+-- B. Update that trail
+-- (Assuming the new trail gets ID 3, but we filter by name to be safe)
+DECLARE @NewID INT = (SELECT TOP 1 TrailID FROM CW1.Trails WHERE TrailName = 'Test Trail');
+EXEC CW1.sp_UpdateTrail @NewID, 'Updated Trail Name', 'Hard';
+
+-- C. Show the results 
+EXEC CW1.sp_SelectTrails;
+
+-- D. Clean up 
+EXEC CW1.sp_DeleteTrail @NewID;
